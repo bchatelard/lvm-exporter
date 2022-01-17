@@ -1,0 +1,30 @@
+project_name: lvm-exporter
+
+builds:
+  - main: .
+    binary: lvm-exporter
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    flags:
+      - -trimpath
+    ldflags: |
+      -s -w
+      -X github.com/prometheus/common/version.Version={{.Version}}
+      -X github.com/prometheus/common/version.Revision={{.FullCommit}}
+      -X github.com/prometheus/common/version.Branch={{.Branch}}
+      -X github.com/prometheus/common/version.BuildDate={{.Date}}
+
+archives:
+  - format: tar.gz
+    wrap_in_directory: true
+    files:
+      - README.md
+
+release:
+  draft: true
+  prerelease: auto
+
+snapshot:
+  name_template: '{{ incpatch .Version }}-snapshot{{ replace (replace .Date ":" "") "-" "" }}+g{{ .ShortCommit }}'

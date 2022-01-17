@@ -1,31 +1,44 @@
-name: Build image from release tag
+name: Release
 
-on:
-  release:
-    types:
-      - published
+on: [push]
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Docker Login
-        uses: docker/login-action@v1
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
         with:
-          username: ${{ secrets.DOCKER_REGISTRY_USER }}
-          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-
-      - name: Lint
-        uses: golangci/golangci-lint-action@v2
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - uses: actions/setup-go@v2
         with:
-          version: v1.32.2
-          args: --timeout=3m
-
-      - name: Build the Docker images
+          go-version: "1.17"
+      - name: "Run tests"
         run: |
-          export GIT_TAG_NAME=${GITHUB_REF##*/}
-          make dockerimages
-          make dockerpush
+          go test ./...
+
+  build:
+    runs-on: ubuntu-latest
+    if: startswith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          path: ./src/github.com/${{ github.repository }}
+      - uses: actions/setup-go@v2
+        with:
+          go-version: "1.17"
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: goreleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          workdir: ./src/github.com/${{ github.repository }}
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
