@@ -10,11 +10,11 @@ lvm-exporter:
 
 .PHONY: dockerimages
 dockerimages:
-	docker build -t mwennrich/lvm-exporter:${DOCKER_TAG} .
+	docker build -t bchatelard/lvm-exporter:${DOCKER_TAG} .
 
 .PHONY: dockerpush
 dockerpush:
-	docker push mwennrich/lvm-exporter:${DOCKER_TAG}
+	docker push bchatelard/lvm-exporter:${DOCKER_TAG}
 
 .PHONY: clean
 clean:

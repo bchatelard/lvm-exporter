@@ -1,4 +1,4 @@
-module github.com/mwennrich/lvm-exporter
+module github.com/bchatelard/lvm-exporter
 
 go 1.17
 
